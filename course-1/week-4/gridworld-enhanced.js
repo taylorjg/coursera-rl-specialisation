@@ -22,7 +22,7 @@ const toSignificantDigits = (map, significantDigits) =>
   new Map(Array.from(map.entries())
     .map(([s, v]) => [s, Number(v.toPrecision(significantDigits))]))
 
-const S = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14] // {1,2,...,14}
+const S = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
 
 const TERMINAL_STATE = 99
 const S_PLUS = [...S, TERMINAL_STATE]
@@ -48,7 +48,7 @@ const newCoordsAfterTakingAction = (x, y, a) => {
 }
 
 const coordsAreOffGrid = (x, y) => (x < 0 || y < 0 || x > 3 || y > 3)
-const coordsAreTerminal = (x, y) => (x === 0 && y === 0) || (x === 3 && y === 3)
+const coordsAreTerminal = (x, y) => x === 0 && y === 0
 const stateToCoords = s => [s % 4, Math.floor(s / 4)]
 const coordsToState = (x, y) => y * 4 + x
 
@@ -59,12 +59,14 @@ const nextStateAndReward = (s, a) => {
   const [x1, y1] = stateToCoords(s)
   const [x2, y2] = newCoordsAfterTakingAction(x1, y1, a)
   if (coordsAreOffGrid(x2, y2)) {
-    return { p: 1, s2: s, r: -1 }
+    const r = [1, 2, 3, 8, 9, 10].includes(s) ? -10 : -1
+    return { p: 1, s2: s, r: r }
   }
   const s2 = coordsAreTerminal(x2, y2)
     ? TERMINAL_STATE
     : coordsToState(x2, y2)
-  return { p: 1, s2, r: -1 }
+  const r = [1, 2, 3, 8, 9, 10].includes(s2) ? -10 : -1
+  return { p: 1, s2, r }
 }
 
 const evaluatePolicy = pi => {
