@@ -1,7 +1,7 @@
 const U = require('../../utils')
 const GW = require('./gridworld-utils')
 
-const S = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+const S = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
 const TERMINAL_STATE = 99
 const S_PLUS = [...S, TERMINAL_STATE]
 
@@ -14,7 +14,7 @@ const A = [UP, DOWN, RIGHT, LEFT]
 let V = new Map(S_PLUS.map(s => [s, 0]))
 
 const GAMMA = 1
-const THETA = 2 + 1e-12
+const THETA = 0.1
 
 const newCoordsAfterTakingAction = (x, y, a) => {
   switch (a) {
@@ -27,7 +27,7 @@ const newCoordsAfterTakingAction = (x, y, a) => {
 }
 
 const coordsAreOffGrid = (x, y) => (x < 0 || y < 0 || x > 3 || y > 3)
-const coordsAreTerminal = (x, y) => (x === 0 && y === 0) || (x === 3 && y === 3)
+const coordsAreTerminal = (x, y) => x === 0 && y === 0
 const stateToCoords = s => [s % 4, Math.floor(s / 4)]
 const coordsToState = (x, y) => y * 4 + x
 
@@ -38,22 +38,27 @@ const nextStateAndReward = (s, a) => {
   const [x1, y1] = stateToCoords(s)
   const [x2, y2] = newCoordsAfterTakingAction(x1, y1, a)
   if (coordsAreOffGrid(x2, y2)) {
-    return { p: 1, s2: s, r: -1 }
+    const r = [1, 2, 3, 8, 9, 10].includes(s) ? -10 : -1
+    return { p: 1, s2: s, r: r }
   }
   const s2 = coordsAreTerminal(x2, y2)
     ? TERMINAL_STATE
     : coordsToState(x2, y2)
-  return { p: 1, s2, r: -1 }
+  const r = [1, 2, 3, 8, 9, 10].includes(s2) ? -10 : -1
+  return { p: 1, s2, r }
 }
 
-const evaluatePolicy = pi => {
+const valueIteration = () => {
   for (; ;) {
     let delta = 0
     for (const s of S) {
       const oldValue = V.get(s)
-      const a = pi.get(s)
-      const { p, s2, r } = nextStateAndReward(s, a)
-      const newValue = p * (r + GAMMA * V.get(s2))
+      const values = A.map(a => {
+        const { p, s2, r } = nextStateAndReward(s, a)
+        const value = p * (r + GAMMA * V.get(s2))
+        return value
+      })
+      const newValue = Math.max(...values)
       V.set(s, newValue)
       delta = Math.max(delta, Math.abs(oldValue - newValue))
     }
@@ -61,9 +66,11 @@ const evaluatePolicy = pi => {
   }
 }
 
-const improvePolicy = pi => {
-  let policyStable = true
-  for (const s of S) {
+const main = () => {
+
+  valueIteration()
+
+  const pi = new Map(S.map(s => {
     const values = A.map(a => {
       const { p, s2, r } = nextStateAndReward(s, a)
       const value = p * (r + GAMMA * V.get(s2))
@@ -71,20 +78,8 @@ const improvePolicy = pi => {
     })
     const index = U.argmax(values)
     const a = A[index]
-    if (a !== pi.get(s)) {
-      policyStable = false
-    }
-    pi.set(s, a)
-  }
-  return policyStable
-}
-
-const main = () => {
-  const pi = new Map(S.map(s => [s, U.randomChoice(A)]))
-  for (; ;) {
-    if (improvePolicy(pi)) break
-    evaluatePolicy(pi)
-  }
+    return [s, a]
+  }))
 
   console.log(`Optimal policy:`)
   GW.printMapInGrid(S, TERMINAL_STATE)(pi, a => {

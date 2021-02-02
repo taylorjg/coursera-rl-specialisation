@@ -1,33 +1,9 @@
-const rangeIter = n => Array(n).keys()
-
-const randomChoice = xs => xs[Math.floor(Math.random() * xs.length)]
-
-const argmax = xs => {
-  let topValue = Number.NEGATIVE_INFINITY
-  let ties = []
-  xs.forEach((value, index) => {
-    if (value > topValue) {
-      topValue = value
-      ties = [index]
-    } else {
-      if (value === topValue) {
-        ties.push(index)
-      }
-    }
-  })
-  return ties.length === 1 ? ties[0] : randomChoice(ties)
-}
-
-const toSignificantDigits = (map, significantDigits) =>
-  new Map(Array.from(map.entries())
-    .map(([s, v]) => [s, Number(v.toPrecision(significantDigits))]))
+const U = require('../../utils')
+const GW = require('./gridworld-utils')
 
 const S = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
-
 const TERMINAL_STATE = 99
 const S_PLUS = [...S, TERMINAL_STATE]
-const GAMMA = 1
-const THETA = 2 + 1e-12
 
 const UP = 0
 const DOWN = 1
@@ -36,6 +12,9 @@ const LEFT = 3
 const A = [UP, DOWN, RIGHT, LEFT]
 
 let V = new Map(S_PLUS.map(s => [s, 0]))
+
+const GAMMA = 1
+const THETA = 2 + 1e-12
 
 const newCoordsAfterTakingAction = (x, y, a) => {
   switch (a) {
@@ -92,7 +71,7 @@ const improvePolicy = pi => {
       const value = p * (r + GAMMA * V.get(s2))
       return value
     })
-    const index = argmax(values)
+    const index = U.argmax(values)
     const a = A[index]
     if (a !== pi.get(s)) {
       policyStable = false
@@ -102,29 +81,15 @@ const improvePolicy = pi => {
   return policyStable
 }
 
-const printMapInGrid = (map, formatValue = v => v) => {
-  const w = 5
-  for (const y of rangeIter(4)) {
-    let line = ''
-    for (const x of rangeIter(4)) {
-      const tmp = y * 4 + x
-      const s = S.includes(tmp) ? tmp : TERMINAL_STATE
-      const value = map.has(s) ? `${formatValue(map.get(s))}` : ''
-      line += value.padStart(w)
-    }
-    console.log(line)
-  }
-}
-
 const main = () => {
-  const pi = new Map(S.map(s => [s, randomChoice(A)]))
+  const pi = new Map(S.map(s => [s, U.randomChoice(A)]))
   for (; ;) {
     if (improvePolicy(pi)) break
     evaluatePolicy(pi)
   }
 
   console.log(`Optimal policy:`)
-  printMapInGrid(pi, a => {
+  GW.printMapInGrid(S, TERMINAL_STATE)(pi, a => {
     switch (a) {
       case UP: return '\u2191'
       case DOWN: return '\u2193'
@@ -137,7 +102,7 @@ const main = () => {
   console.log()
 
   console.log(`Optimal state value function:`)
-  printMapInGrid(V)
+  GW.printMapInGrid(S, TERMINAL_STATE)(V)
 }
 
 main()
