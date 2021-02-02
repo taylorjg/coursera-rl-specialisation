@@ -1,12 +1,7 @@
 {
   "name": "coursera-rl-specialisation",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC"
+  "version": "0.0.0",
+  "description": "Bits of code related to the Reinforcement Learning Specialization (Coursera)",
+  "author": "Jonathan Taylor",
+  "license": "MIT"
 }
