@@ -1,5 +1,5 @@
-const U = require('../../utils')
 const GW = require('./gridworld-utils')
+const configureGPI = require('./generalised-policy-iteration')
 
 const S = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
 const TERMINAL_STATE = 99
@@ -11,10 +11,10 @@ const RIGHT = 2
 const LEFT = 3
 const A = [UP, DOWN, RIGHT, LEFT]
 
-let V = new Map(S_PLUS.map(s => [s, 0]))
-
 const GAMMA = 1
 const THETA = .1
+
+const GPI = configureGPI(S, A, GAMMA, THETA)
 
 const newCoordsAfterTakingAction = (x, y, a) => {
   switch (a) {
@@ -31,53 +31,26 @@ const coordsAreTerminal = (x, y) => (x === 0 && y === 0) || (x === 3 && y === 3)
 const stateToCoords = s => [s % 4, Math.floor(s / 4)]
 const coordsToState = (x, y) => y * 4 + x
 
-const nextStateAndReward = (s, a) => {
+const dynamics = (s, a) => {
   if (s === TERMINAL_STATE) {
-    return { p: 1, s2: s, r: 0 }
+    return [{ p: 1, s2: s, r: 0 }]
   }
   const [x1, y1] = stateToCoords(s)
   const [x2, y2] = newCoordsAfterTakingAction(x1, y1, a)
   if (coordsAreOffGrid(x2, y2)) {
-    return { p: 1, s2: s, r: -1 }
+    return [{ p: 1, s2: s, r: -1 }]
   }
   const s2 = coordsAreTerminal(x2, y2)
     ? TERMINAL_STATE
     : coordsToState(x2, y2)
-  return { p: 1, s2, r: -1 }
-}
-
-const valueIteration = () => {
-  for (; ;) {
-    let delta = 0
-    for (const s of S) {
-      const oldValue = V.get(s)
-      const values = A.map(a => {
-        const { p, s2, r } = nextStateAndReward(s, a)
-        const value = p * (r + GAMMA * V.get(s2))
-        return value
-      })
-      const newValue = Math.max(...values)
-      V.set(s, newValue)
-      delta = Math.max(delta, Math.abs(oldValue - newValue))
-    }
-    if (delta < THETA) break
-  }
+  return [{ p: 1, s2, r: -1 }]
 }
 
 const main = () => {
 
-  valueIteration()
-
-  const pi = new Map(S.map(s => {
-    const values = A.map(a => {
-      const { p, s2, r } = nextStateAndReward(s, a)
-      const value = p * (r + GAMMA * V.get(s2))
-      return value
-    })
-    const index = U.argmax(values)
-    const a = A[index]
-    return [s, a]
-  }))
+  const V = new Map(S_PLUS.map(s => [s, 0]))
+  GPI.valueIteration(V, dynamics)
+  const pi = GPI.makeGreedyPolicy(V, dynamics)
 
   console.log(`Optimal policy:`)
   GW.printMapInGrid(S, TERMINAL_STATE)(pi, a => {

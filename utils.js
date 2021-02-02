@@ -2,6 +2,8 @@ const rangeIter = n => Array(n).keys()
 
 const randomChoice = xs => xs[Math.floor(Math.random() * xs.length)]
 
+const sum = xs => xs.reduce((acc, x) => acc + x, 0)
+
 const argmax = xs => {
   let topValue = Number.NEGATIVE_INFINITY
   let ties = []
@@ -24,6 +26,7 @@ const toSignificantDigits = (map, significantDigits) =>
 
 module.exports = {
   rangeIter,
+  sum,
   randomChoice,
   argmax,
   toSignificantDigits
