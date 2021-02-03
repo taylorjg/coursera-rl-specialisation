@@ -6,6 +6,12 @@ const RIGHT = 2
 const LEFT = 3
 const A = [UP, DOWN, RIGHT, LEFT]
 
+const BLUE_STATES = [1, 2, 3, 8, 9, 10]
+const TERMINAL_STATE = 99
+
+const NORMAL_TERMINAL_STATE_COORDS = [[0, 0], [3, 3]]
+const ENHANCED_TERMINAL_STATE_COORDS = [[0, 0]]
+
 const newCoordsAfterTakingAction = (x, y, a) => {
   switch (a) {
     case UP: return [x, y - 1]
@@ -17,12 +23,34 @@ const newCoordsAfterTakingAction = (x, y, a) => {
 }
 
 const coordsAreOffGrid = (x, y) => (x < 0 || y < 0 || x > 3 || y > 3)
-const coordsAreTerminal = (TERMINAL_STATE_COORDS, x, y) =>
-  TERMINAL_STATE_COORDS.some(([tscx, tscy]) => x == tscx && y === tscy)
+const coordsAreTerminal = (tscs, x, y) => tscs.some(([tscx, tscy]) => x == tscx && y === tscy)
 const stateToCoords = s => [s % 4, Math.floor(s / 4)]
 const coordsToState = (x, y) => y * 4 + x
 
-const printMapInGrid = (S, TERMINAL_STATE) => (map, formatValue = v => v) => {
+const normalDynamics = (s, a) => {
+  const [x1, y1] = stateToCoords(s)
+  const [x2, y2] = newCoordsAfterTakingAction(x1, y1, a)
+  const s2 = coordsAreOffGrid(x2, y2)
+    ? s
+    : coordsAreTerminal(NORMAL_TERMINAL_STATE_COORDS, x2, y2)
+      ? TERMINAL_STATE
+      : coordsToState(x2, y2)
+  return [{ p: 1, s2, r: -1 }]
+}
+
+const enhancedDynamics = (s, a) => {
+  const [x1, y1] = stateToCoords(s)
+  const [x2, y2] = newCoordsAfterTakingAction(x1, y1, a)
+  const s2 = coordsAreOffGrid(x2, y2)
+    ? s
+    : coordsAreTerminal(ENHANCED_TERMINAL_STATE_COORDS, x2, y2)
+      ? TERMINAL_STATE
+      : coordsToState(x2, y2)
+  const r = BLUE_STATES.includes(s2) ? -10 : -1
+  return [{ p: 1, s2, r }]
+}
+
+const printMapInGrid = S => (map, formatValue = v => v) => {
   const w = 5
   for (const y of U.rangeIter(4)) {
     let line = ''
@@ -36,10 +64,10 @@ const printMapInGrid = (S, TERMINAL_STATE) => (map, formatValue = v => v) => {
   }
 }
 
-const printResults = (S, TERMINAL_STATE) => (V, pi) => {
+const printResults = S => (V, pi) => {
 
   console.log(`Optimal policy:`)
-  printMapInGrid(S, TERMINAL_STATE)(pi, a => {
+  printMapInGrid(S)(pi, a => {
     switch (a) {
       case UP: return '\u2191'
       case DOWN: return '\u2193'
@@ -52,16 +80,13 @@ const printResults = (S, TERMINAL_STATE) => (V, pi) => {
   console.log()
 
   console.log(`Optimal state value function:`)
-  printMapInGrid(S, TERMINAL_STATE)(V)
+  printMapInGrid(S)(V)
 }
 
 module.exports = {
-  UP, DOWN, LEFT, RIGHT,
   A,
-  newCoordsAfterTakingAction,
-  coordsAreOffGrid,
-  coordsAreTerminal,
-  stateToCoords,
-  coordsToState,
+  TERMINAL_STATE,
+  normalDynamics,
+  enhancedDynamics,
   printResults
 }
