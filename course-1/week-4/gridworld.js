@@ -13,17 +13,13 @@ const THETA = 2 + 1e-12
 const GPI = configureGPI(S, GW.A, GAMMA, THETA)
 
 const dynamics = (s, a) => {
-  if (s === TERMINAL_STATE) {
-    return [{ p: 1, s2: s, r: 0 }]
-  }
   const [x1, y1] = GW.stateToCoords(s)
   const [x2, y2] = GW.newCoordsAfterTakingAction(x1, y1, a)
-  if (GW.coordsAreOffGrid(x2, y2)) {
-    return [{ p: 1, s2: s, r: -1 }]
-  }
-  const s2 = GW.coordsAreTerminal(TERMINAL_STATE_COORDS, x2, y2)
-    ? TERMINAL_STATE
-    : GW.coordsToState(x2, y2)
+  const s2 = GW.coordsAreOffGrid(x2, y2)
+    ? s
+    : GW.coordsAreTerminal(TERMINAL_STATE_COORDS, x2, y2)
+      ? TERMINAL_STATE
+      : GW.coordsToState(x2, y2)
   return [{ p: 1, s2, r: -1 }]
 }
 
