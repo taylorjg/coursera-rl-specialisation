@@ -1,7 +1,10 @@
 {
   "name": "coursera-rl-specialisation",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Bits of code related to the Reinforcement Learning Specialization (Coursera)",
   "author": "Jonathan Taylor",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "yargs": "^16.2.0"
+  }
 }
