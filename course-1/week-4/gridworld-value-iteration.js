@@ -11,8 +11,8 @@ const GPI = configureGPI(S, GW.A, GAMMA, THETA)
 
 const main = () => {
   const V = new Map(S_PLUS.map(s => [s, 0]))
-  GPI.valueIteration(V, GW.normalDynamics)
-  const pi = GPI.makeGreedyPolicy(V, GW.normalDynamics)
+  GPI.valueIteration(V, GW.regularDynamics)
+  const pi = GPI.makeGreedyPolicy(V, GW.regularDynamics)
   GW.printResults(S)(V, pi)
 }
 

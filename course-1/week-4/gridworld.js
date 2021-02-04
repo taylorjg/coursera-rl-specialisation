@@ -13,8 +13,8 @@ const main = () => {
   const V = new Map(S_PLUS.map(s => [s, 0]))
   const pi = new Map(S.map(s => [s, 0]))
   for (; ;) {
-    if (GPI.improvePolicy(V, pi, GW.normalDynamics)) break
-    GPI.evaluatePolicy(V, pi, GW.normalDynamics)
+    if (GPI.improvePolicy(V, pi, GW.regularDynamics)) break
+    GPI.evaluatePolicy(V, pi, GW.regularDynamics)
   }
   GW.printResults(S)(V, pi)
 }

@@ -9,7 +9,7 @@ const A = [UP, DOWN, RIGHT, LEFT]
 const BLUE_STATES = [1, 2, 3, 8, 9, 10]
 const TERMINAL_STATE = 99
 
-const NORMAL_TERMINAL_STATE_COORDS = [[0, 0], [3, 3]]
+const REGULAR_TERMINAL_STATE_COORDS = [[0, 0], [3, 3]]
 const ENHANCED_TERMINAL_STATE_COORDS = [[0, 0]]
 
 const newCoordsAfterTakingAction = (x, y, a) => {
@@ -27,12 +27,12 @@ const coordsAreTerminal = (tscs, x, y) => tscs.some(([tscx, tscy]) => x == tscx 
 const stateToCoords = s => [s % 4, Math.floor(s / 4)]
 const coordsToState = (x, y) => y * 4 + x
 
-const normalDynamics = (s, a) => {
+const regularDynamics = (s, a) => {
   const [x1, y1] = stateToCoords(s)
   const [x2, y2] = newCoordsAfterTakingAction(x1, y1, a)
   const s2 = coordsAreOffGrid(x2, y2)
     ? s
-    : coordsAreTerminal(NORMAL_TERMINAL_STATE_COORDS, x2, y2)
+    : coordsAreTerminal(REGULAR_TERMINAL_STATE_COORDS, x2, y2)
       ? TERMINAL_STATE
       : coordsToState(x2, y2)
   return [{ p: 1, s2, r: -1 }]
@@ -86,7 +86,7 @@ const printResults = S => (V, pi) => {
 module.exports = {
   A,
   TERMINAL_STATE,
-  normalDynamics,
+  regularDynamics,
   enhancedDynamics,
   printResults
 }
