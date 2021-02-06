@@ -1,19 +1,31 @@
 const yargs = require('yargs')
 
-const regular = () => {
-  console.log('[regular]')
+const configureGW = require('./gw')
+const configureGPI = require('./gpi')
+
+const GAMMA = 1
+
+const policyIteration = enhanced => {
+  const GW = configureGW(enhanced)
+  const THETA = 2 + 1e-12
+  const GPI = configureGPI(GW.S, GW.A, GAMMA, THETA)
+  const V = new Map(GW.S_PLUS.map(s => [s, 0]))
+  const pi = new Map(GW.S.map(s => [s, 0]))
+  for (; ;) {
+    if (GPI.improvePolicy(V, pi, GW.dynamics)) break
+    GPI.evaluatePolicy(V, pi, GW.dynamics)
+  }
+  GW.printResults(V, pi)
 }
 
-const enhanced = () => {
-  console.log('[enhanced]')
-}
-
-const regularWithValueIteration = () => {
-  console.log('[regularWithValueIteration]')
-}
-
-const enhancedWithValueIteration = () => {
-  console.log('[enhancedWithValueIteration]')
+const valueIteration = enhanced => {
+  const GW = configureGW(enhanced)
+  const THETA = 0.1
+  const GPI = configureGPI(GW.S, GW.A, GAMMA, THETA)
+  const V = new Map(GW.S_PLUS.map(s => [s, 0]))
+  GPI.valueIteration(V, GW.dynamics)
+  const pi = GPI.makeGreedyPolicy(V, GW.dynamics)
+  GW.printResults(V, pi)
 }
 
 const main = () => {
@@ -26,19 +38,14 @@ const main = () => {
     .option('v', {
       alias: 'valueIteration',
       nargs: 0,
-      describe: 'Use value iteration (versus policy evaluation / improvement)'
+      describe: 'Use value iteration (versus policy iteration)'
     })
     .wrap(null)
     .argv
 
-  const flagsCombination = `${Boolean(argv.enhanced)}:${Boolean(argv.valueIteration)}`
-
-  switch (flagsCombination) {
-    case 'false:false': return regular()
-    case 'true:false': return enhanced()
-    case 'false:true': return regularWithValueIteration()
-    case 'true:true': return enhancedWithValueIteration()
-  }
+  argv.valueIteration
+    ? valueIteration(argv.enhanced)
+    : policyIteration(argv.enhanced)
 }
 
 main()
