@@ -33,7 +33,7 @@ const configureGW = enhanced => {
   const stateToCoords = s => [s % 4, Math.floor(s / 4)]
   const coordsToState = (x, y) => y * 4 + x
 
-  const regularDynamics = (s, a) => {
+  const regularTransitions = (s, a) => {
     const [x1, y1] = stateToCoords(s)
     const [x2, y2] = newCoordsAfterTakingAction(x1, y1, a)
     const s2 = coordsAreOffGrid(x2, y2)
@@ -44,7 +44,7 @@ const configureGW = enhanced => {
     return [{ p: 1, s2, r: -1 }]
   }
 
-  const enhancedDynamics = (s, a) => {
+  const enhancedTransitions = (s, a) => {
     const [x1, y1] = stateToCoords(s)
     const [x2, y2] = newCoordsAfterTakingAction(x1, y1, a)
     const s2 = coordsAreOffGrid(x2, y2)
@@ -93,7 +93,7 @@ const configureGW = enhanced => {
     S,
     S_PLUS,
     A,
-    dynamics: enhanced ? enhancedDynamics : regularDynamics,
+    transitions: enhanced ? enhancedTransitions : regularTransitions,
     printResults
   }
 }

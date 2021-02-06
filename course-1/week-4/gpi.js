@@ -2,19 +2,19 @@ const U = require('../../utils')
 
 const configureGPI = (S, A, GAMMA, THETA) => {
 
-  const sumOverDynamics = (V, s, a, dynamics) => {
-    const values = dynamics(s, a).map(({ p, s2, r }) =>
+  const sumOverTransitions = (V, s, a, transitions) => {
+    const values = transitions(s, a).map(({ p, s2, r }) =>
       p * (r + GAMMA * V.get(s2)))
     return U.sum(values)
   }
 
-  const evaluatePolicy = (V, pi, dynamics) => {
+  const evaluatePolicy = (V, pi, transitions) => {
     for (; ;) {
       let delta = 0
       for (const s of S) {
         const oldValue = V.get(s)
         const a = pi.get(s)
-        const newValue = sumOverDynamics(V, s, a, dynamics)
+        const newValue = sumOverTransitions(V, s, a, transitions)
         V.set(s, newValue)
         delta = Math.max(delta, Math.abs(oldValue - newValue))
       }
@@ -22,10 +22,10 @@ const configureGPI = (S, A, GAMMA, THETA) => {
     }
   }
 
-  const improvePolicy = (V, pi, dynamics) => {
+  const improvePolicy = (V, pi, transitions) => {
     let policyStable = true
     for (const s of S) {
-      const values = A.map(a => sumOverDynamics(V, s, a, dynamics))
+      const values = A.map(a => sumOverTransitions(V, s, a, transitions))
       const index = U.argmax(values)
       const a = A[index]
       if (a !== pi.get(s)) {
@@ -36,12 +36,12 @@ const configureGPI = (S, A, GAMMA, THETA) => {
     return policyStable
   }
 
-  const valueIteration = (V, dynamics) => {
+  const valueIteration = (V, transitions) => {
     for (; ;) {
       let delta = 0
       for (const s of S) {
         const oldValue = V.get(s)
-        const values = A.map(a => sumOverDynamics(V, s, a, dynamics))
+        const values = A.map(a => sumOverTransitions(V, s, a, transitions))
         const newValue = Math.max(...values)
         V.set(s, newValue)
         delta = Math.max(delta, Math.abs(oldValue - newValue))
@@ -50,9 +50,9 @@ const configureGPI = (S, A, GAMMA, THETA) => {
     }
   }
 
-  const makeGreedyPolicy = (V, dynamics) => {
+  const makeGreedyPolicy = (V, transitions) => {
     const pi = new Map(S.map(s => {
-      const values = A.map(a => sumOverDynamics(V, s, a, dynamics))
+      const values = A.map(a => sumOverTransitions(V, s, a, transitions))
       const index = U.argmax(values)
       const a = A[index]
       return [s, a]

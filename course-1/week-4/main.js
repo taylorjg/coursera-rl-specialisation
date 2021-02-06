@@ -6,25 +6,27 @@ const configureGPI = require('./gpi')
 const GAMMA = 1
 
 const policyIteration = enhanced => {
+  console.log(`policy iteration (${enhanced ? 'enhanced' : 'regular'} gridworld)`)
   const GW = configureGW(enhanced)
   const THETA = 2 + 1e-12
   const GPI = configureGPI(GW.S, GW.A, GAMMA, THETA)
   const V = new Map(GW.S_PLUS.map(s => [s, 0]))
   const pi = new Map(GW.S.map(s => [s, 0]))
   for (; ;) {
-    if (GPI.improvePolicy(V, pi, GW.dynamics)) break
-    GPI.evaluatePolicy(V, pi, GW.dynamics)
+    if (GPI.improvePolicy(V, pi, GW.transitions)) break
+    GPI.evaluatePolicy(V, pi, GW.transitions)
   }
   GW.printResults(V, pi)
 }
 
 const valueIteration = enhanced => {
+  console.log(`value iteration (${enhanced ? 'enhanced' : 'regular'} gridworld)`)
   const GW = configureGW(enhanced)
   const THETA = 0.1
   const GPI = configureGPI(GW.S, GW.A, GAMMA, THETA)
   const V = new Map(GW.S_PLUS.map(s => [s, 0]))
-  GPI.valueIteration(V, GW.dynamics)
-  const pi = GPI.makeGreedyPolicy(V, GW.dynamics)
+  GPI.valueIteration(V, GW.transitions)
+  const pi = GPI.makeGreedyPolicy(V, GW.transitions)
   GW.printResults(V, pi)
 }
 
