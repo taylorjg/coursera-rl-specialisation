@@ -56,7 +56,7 @@ const configureGW = enhanced => {
     return [{ p: 1, s2, r }]
   }
 
-  const printMapInGrid = (map, formatValue = v => v) => {
+  const printMapAsGrid = (map, formatValue = v => v) => {
     const w = 5
     for (const y of U.rangeIter(4)) {
       let line = ''
@@ -73,20 +73,20 @@ const configureGW = enhanced => {
   const printResults = (V, pi) => {
 
     console.log(`Optimal policy:`)
-    printMapInGrid(pi, a => {
+    printMapAsGrid(pi, a => {
       switch (a) {
         case UP: return '\u2191'
         case DOWN: return '\u2193'
         case RIGHT: return '\u2192'
         case LEFT: return '\u2190'
-        default: throw new Error(`[printMapInGrid#formatValue] unknown action "${a}"`)
+        default: throw new Error(`[printMapAsGrid#formatValue] unknown action "${a}"`)
       }
     })
 
     console.log()
 
     console.log(`Optimal state value function:`)
-    printMapInGrid(V)
+    printMapAsGrid(V)
   }
 
   return {
