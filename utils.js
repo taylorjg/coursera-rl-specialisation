@@ -1,8 +1,17 @@
-const rangeIter = n => Array(n).keys()
+const range = n => Array.from(Array(n).keys())
+
+function* rangeIter(n) {
+  let value = 0
+  while (value < n) {
+    yield value++
+  }
+}
 
 const randomChoice = xs => xs[Math.floor(Math.random() * xs.length)]
 
 const sum = xs => xs.reduce((acc, x) => acc + x, 0)
+
+const average = xs => sum(xs) / xs.length
 
 const argmax = xs => {
   let topValue = Number.NEGATIVE_INFINITY
@@ -25,8 +34,10 @@ const toSignificantDigits = (map, significantDigits) =>
     .map(([s, v]) => [s, Number(v.toPrecision(significantDigits))]))
 
 module.exports = {
+  range,
   rangeIter,
   sum,
+  average,
   randomChoice,
   argmax,
   toSignificantDigits

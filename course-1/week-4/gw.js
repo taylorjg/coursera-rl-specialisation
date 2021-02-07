@@ -56,6 +56,16 @@ const configureGW = enhanced => {
     return [{ p: 1, s2, r }]
   }
 
+  const makeRegularMove = (s, a) => {
+    const { s2, r } = regularTransitions(s, a)[0]
+    return { s2, r, done: s2 === TERMINAL_STATE }
+  }
+
+  const makeEnhancedMove = (s, a) => {
+    const { s2, r } = enhancedTransitions(s, a)[0]
+    return { s2, r, done: s2 === TERMINAL_STATE }
+  }
+
   const printMapAsGrid = (map, formatValue = v => v) => {
     const w = 5
     for (const y of U.rangeIter(4)) {
@@ -86,7 +96,7 @@ const configureGW = enhanced => {
     console.log()
 
     console.log(`Optimal state value function:`)
-    printMapAsGrid(V)
+    printMapAsGrid(V, v => v.toPrecision(2))
   }
 
   return {
@@ -94,6 +104,7 @@ const configureGW = enhanced => {
     S_PLUS,
     A,
     transitions: enhanced ? enhancedTransitions : regularTransitions,
+    makeMove: enhanced ? makeEnhancedMove : makeRegularMove, 
     printResults
   }
 }
