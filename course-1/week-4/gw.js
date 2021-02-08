@@ -104,7 +104,7 @@ const configureGW = enhanced => {
     S_PLUS,
     A,
     transitions: enhanced ? enhancedTransitions : regularTransitions,
-    makeMove: enhanced ? makeEnhancedMove : makeRegularMove, 
+    makeMove: enhanced ? makeEnhancedMove : makeRegularMove,
     printResults
   }
 }

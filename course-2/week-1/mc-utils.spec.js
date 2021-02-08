@@ -10,21 +10,18 @@ describe('mc-utils', () => {
   it('initialiseStateActionMap', () => {
     const S = [0, 1, 2]
     const A = [3, 4, 5]
-    const map = MCU.initialiseStateActionMap(S, A, () => 42)
-    const mapEntries = Array.from(map.entries())
-    expect(mapEntries).toEqual([
+    const Q = MCU.initialiseStateActionMap(S, A, () => 42)
+    expect(Q).toEqual(new Map([
       ['0:3', 42],
       ['0:4', 42],
       ['0:5', 42],
-
       ['1:3', 42],
       ['1:4', 42],
       ['1:5', 42],
-
       ['2:3', 42],
       ['2:4', 42],
-      ['2:5', 42],
-    ])
+      ['2:5', 42]
+    ]))
   })
 
   it('checkFirstVisit: (s, a) does not appear earlier', () => {
@@ -65,5 +62,16 @@ describe('mc-utils', () => {
     expect(ones).toBeWithin(...makeRange(probDist.get(1)))
     expect(twos).toBeWithin(...makeRange(probDist.get(2)))
     expect(threes).toBeWithin(...makeRange(probDist.get(3)))
+  })
+
+  it('makeEquiprobablePolicyMap', () => {
+    const S = [0, 1, 2]
+    const A = [3, 4, 5, 6, 7]
+    const policyMap = MCU.makeEquiprobablePolicyMap(S, A)
+    expect(policyMap).toEqual(new Map([
+      [0, new Map([[3, 0.2], [4, 0.2], [5, 0.2], [6, 0.2], [7, 0.2]])],
+      [1, new Map([[3, 0.2], [4, 0.2], [5, 0.2], [6, 0.2], [7, 0.2]])],
+      [2, new Map([[3, 0.2], [4, 0.2], [5, 0.2], [6, 0.2], [7, 0.2]])]
+    ]))
   })
 })

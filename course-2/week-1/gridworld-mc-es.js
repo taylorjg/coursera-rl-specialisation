@@ -37,7 +37,7 @@ const main = () => {
   const pi = new Map(GW.S.map(s => [s, 0]))
   const returns = MCU.initialiseStateActionMap(GW.S, GW.A, () => [])
   const Q = MCU.initialiseStateActionMap(GW.S, GW.A, () => 0)
-  const MAX_EPISODES = argv.enhanced ? 50000 : 10000
+  const MAX_EPISODES = argv.enhanced ? 50_000 : 10_000
   for (const _ of U.rangeIter(MAX_EPISODES)) {
     const s0 = U.randomChoice(GW.S)
     const a0 = U.randomChoice(GW.A)
