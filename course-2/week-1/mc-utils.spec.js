@@ -1,4 +1,5 @@
 const MCU = require('./mc-utils')
+const U = require('../../utils')
 
 describe('mc-utils', () => {
 
@@ -46,5 +47,23 @@ describe('mc-utils', () => {
     ]
     const isFirstVisit = MCU.checkFirstVisit(episode, 3)
     expect(isFirstVisit).toBeFalsy()
+  })
+
+  it('probDistChoice', () => {
+    const ITERS = 10000
+    const TOLERANCE_PC = 10
+    const probDist = new Map([[1, 0.1], [2, 0.8], [3, 0.1]])
+    const results = U.range(ITERS).map(_ => MCU.probDistChoice(probDist))
+    const countValue = v => results.filter(item => item === v).length
+    const ones = countValue(1)
+    const twos = countValue(2)
+    const threes = countValue(3)
+    const makeRange = p => [
+      ITERS * p * (100 - TOLERANCE_PC) / 100,
+      ITERS * p * (100 + TOLERANCE_PC) / 100 + 1
+    ]
+    expect(ones).toBeWithin(...makeRange(probDist.get(1)))
+    expect(twos).toBeWithin(...makeRange(probDist.get(2)))
+    expect(threes).toBeWithin(...makeRange(probDist.get(3)))
   })
 })

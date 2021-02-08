@@ -21,6 +21,6 @@ describe('utils', () => {
 
   it('argmax: with ties', () => {
     const values = [2, 5, 76, 101, 57, 101, 33]
-    expect([3, 5]).toContain(U.argmax(values))
+    expect(U.argmax(values)).toBeOneOf([3, 5])
   })
 })
