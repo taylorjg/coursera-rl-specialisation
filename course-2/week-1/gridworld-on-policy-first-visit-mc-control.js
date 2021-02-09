@@ -1,18 +1,21 @@
+const yargs = require('yargs')
+
 const configureGW = require('../../course-1/week-4/gw')
 const MCU = require('./mc-utils')
 const U = require('../../utils')
 
 const GAMMA = 1
-const EPSILON = 0.1
+const EPSILON = 0.01
 
 const generateEpisode = (pi, makeMove, s0) => {
+  const MAX_EPISODE_LENGTH = 10 // in case we get stuck
   const episode = []
   let s = s0
   for (; ;) {
     const a = pi(s)
     const { s2, r, done } = makeMove(s, a)
     episode.push({ s, a, r })
-    if (done) break
+    if (done || episode.length >= MAX_EPISODE_LENGTH) break
     s = s2
   }
   return episode
@@ -24,12 +27,23 @@ const makePolicyOverPolicyMap = policyMap => s => {
 }
 
 const main = () => {
-  const GW = configureGW(false)
+  const argv = yargs
+    .option('e', {
+      alias: 'enhanced',
+      nargs: 0,
+      describe: 'Use enhanced gridworld (versus regular gridworld)',
+      type: 'boolean',
+      default: false
+    })
+    .wrap(null)
+    .argv
+
+  const GW = configureGW(argv.enhanced)
   const policyMap = MCU.makeEquiprobablePolicyMap(GW.S, GW.A)
   const pi = makePolicyOverPolicyMap(policyMap)
-  const returns = MCU.initialiseStateActionMap(GW.S, GW.A, () => [])
+  const returns = MCU.initialiseStateActionMap(GW.S, GW.A, () => [0, 0])
   const Q = MCU.initialiseStateActionMap(GW.S, GW.A, () => 0)
-  const MAX_EPISODES = 10_000
+  const MAX_EPISODES = 1_000_000
   for (const _ of U.rangeIter(MAX_EPISODES)) {
     const s0 = U.randomChoice(GW.S)
     const episode = generateEpisode(pi, GW.makeMove, s0)
@@ -41,10 +55,13 @@ const main = () => {
       const isFirstVisit = MCU.checkFirstVisit(episode, t)
       if (isFirstVisit) {
         const key = MCU.makeStateActionKey(St, At)
-        const list = returns.get(key)
-        list.push(G)
-        const newAverage = U.average(list)
-        Q.set(key, newAverage)
+        const arr = returns.get(key)
+        const [currentAverageReturn, currentCount] = arr
+        const newCount = currentCount + 1
+        const newAverageReturn = currentAverageReturn + (1 / newCount) * (G - currentAverageReturn)
+        arr[0] = newAverageReturn
+        arr[1] = newCount
+        Q.set(key, newAverageReturn)
         const values = GW.A.map(a => Q.get(MCU.makeStateActionKey(St, a)))
         const index = U.argmax(values)
         const bestAction = GW.A[index]

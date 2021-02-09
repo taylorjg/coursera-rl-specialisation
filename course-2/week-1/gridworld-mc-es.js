@@ -7,7 +7,7 @@ const U = require('../../utils')
 const GAMMA = 1
 
 const generateEpisode = (pi, makeMove, s0, a0) => {
-  const MAX_EPISODE_LENGTH = 25 // in case we get stuck
+  const MAX_EPISODE_LENGTH = 10 // in case we get stuck
   const episode = []
   const { s2, r, done } = makeMove(s0, a0)
   episode.push({ s: s0, a: a0, r })
@@ -28,16 +28,18 @@ const main = () => {
     .option('e', {
       alias: 'enhanced',
       nargs: 0,
-      describe: 'Use enhanced gridworld (versus regular gridworld)'
+      describe: 'Use enhanced gridworld (versus regular gridworld)',
+      type: 'boolean',
+      default: false
     })
     .wrap(null)
     .argv
 
   const GW = configureGW(argv.enhanced)
   const pi = new Map(GW.S.map(s => [s, 0]))
-  const returns = MCU.initialiseStateActionMap(GW.S, GW.A, () => [])
+  const returns = MCU.initialiseStateActionMap(GW.S, GW.A, () => [0, 0])
   const Q = MCU.initialiseStateActionMap(GW.S, GW.A, () => 0)
-  const MAX_EPISODES = argv.enhanced ? 50_000 : 10_000
+  const MAX_EPISODES = argv.enhanced ? 500_000 : 10_000
   for (const _ of U.rangeIter(MAX_EPISODES)) {
     const s0 = U.randomChoice(GW.S)
     const a0 = U.randomChoice(GW.A)
@@ -50,10 +52,13 @@ const main = () => {
       const isFirstVisit = MCU.checkFirstVisit(episode, t)
       if (isFirstVisit) {
         const key = MCU.makeStateActionKey(St, At)
-        const list = returns.get(key)
-        list.push(G)
-        const newAverage = U.average(list)
-        Q.set(key, newAverage)
+        const arr = returns.get(key)
+        const [currentAverageReturn, currentCount] = arr
+        const newCount = currentCount + 1
+        const newAverageReturn = currentAverageReturn + (1 / newCount) * (G - currentAverageReturn)
+        arr[0] = newAverageReturn
+        arr[1] = newCount
+        Q.set(key, newAverageReturn)
         const values = GW.A.map(a => Q.get(MCU.makeStateActionKey(St, a)))
         const index = U.argmax(values)
         pi.set(St, GW.A[index])
@@ -69,7 +74,7 @@ const main = () => {
       return [s, 0]
     }
   }))
-  
+
   GW.printResults(V, pi)
 }
 
