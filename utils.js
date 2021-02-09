@@ -7,11 +7,11 @@ function* rangeIter(n) {
   }
 }
 
-const randomChoice = xs => xs[Math.floor(Math.random() * xs.length)]
-
 const sum = xs => xs.reduce((acc, x) => acc + x, 0)
 
 const average = xs => sum(xs) / xs.length
+
+const randomChoice = xs => xs[Math.floor(Math.random() * xs.length)]
 
 const argmax = xs => {
   let topValue = Number.NEGATIVE_INFINITY
