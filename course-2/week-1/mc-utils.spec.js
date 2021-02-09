@@ -51,17 +51,14 @@ describe('mc-utils', () => {
     const TOLERANCE_PC = 10
     const probDist = new Map([[1, 0.1], [2, 0.8], [3, 0.1]])
     const results = U.range(ITERS).map(_ => MCU.probDistChoice(probDist))
-    const countValue = v => results.filter(item => item === v).length
-    const ones = countValue(1)
-    const twos = countValue(2)
-    const threes = countValue(3)
+    const occurrencesOf = a => results.reduce((count, b) => a === b ? count + 1 : count, 0)
     const makeRange = p => [
       ITERS * p * (100 - TOLERANCE_PC) / 100,
       ITERS * p * (100 + TOLERANCE_PC) / 100 + 1
     ]
-    expect(ones).toBeWithin(...makeRange(probDist.get(1)))
-    expect(twos).toBeWithin(...makeRange(probDist.get(2)))
-    expect(threes).toBeWithin(...makeRange(probDist.get(3)))
+    expect(occurrencesOf(1)).toBeWithin(...makeRange(probDist.get(1)))
+    expect(occurrencesOf(2)).toBeWithin(...makeRange(probDist.get(2)))
+    expect(occurrencesOf(3)).toBeWithin(...makeRange(probDist.get(3)))
   })
 
   it('makeEquiprobablePolicyMap', () => {
