@@ -29,7 +29,7 @@ const argmax = xs => {
   return ties.length === 1 ? ties[0] : randomChoice(ties)
 }
 
-const toSignificantDigits = (map, significantDigits) =>
+const toSignificantDigits = (map, significantDigits = 2) =>
   new Map(Array.from(map.entries())
     .map(([s, v]) => [s, Number(v.toPrecision(significantDigits))]))
 
