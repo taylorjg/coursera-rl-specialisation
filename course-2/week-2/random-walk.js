@@ -1,3 +1,4 @@
+const { plot } = require('nodeplotlib')
 const U = require('../../utils')
 
 const STATE_TERMINAL_LEFT = 0
@@ -16,10 +17,8 @@ const LEFT = 0
 const RIGHT = 1
 const A = [LEFT, RIGHT]
 
-const ALPHA = 0.01
+const ALPHA = 0.1
 const GAMMA = 1
-
-const MAX_EPISODES = 10000
 
 const move = (s, a) => {
   switch (a) {
@@ -50,9 +49,9 @@ const takeAction = (s, a) => {
   }
 }
 
-const TD0 = pi => {
-  const V = new Map(S_PLUS.map(s => [s, 0]))
-  for (const _ of U.rangeIter(MAX_EPISODES)) {
+const TD0 = (pi, maxEpisodes) => {
+  const V = new Map(S_PLUS.map(s => [s, s === STATE_TERMINAL_LEFT || s === STATE_TERMINAL_RIGHT ? 0 : 0.5]))
+  for (const _ of U.rangeIter(maxEpisodes)) {
     let s = S0
     for (; ;) {
       const a = pi(s)
@@ -66,10 +65,33 @@ const TD0 = pi => {
   return V
 }
 
+const makeLine = (V, name, color) => ({
+  x: ['A', 'B', 'C', 'D', 'E'],
+  y: S.map(s => V.get(s)),
+  mode: 'lines+markers',
+  line: { color },
+  name
+})
+
 const main = () => {
   const pi = _s => U.randomChoice(A)
-  const V = TD0(pi)
-  console.dir(U.toSignificantDigits(V))
+  const V0 = TD0(pi, 0)
+  const V1 = TD0(pi, 1)
+  const V10 = TD0(pi, 10)
+  const V100 = TD0(pi, 100)
+  const real = new Map(U.range(5).map(n => n + 1).map(s => [s, s / 6]))
+  const line0 = makeLine(V0, '0', 'grey')
+  const line1 = makeLine(V1, '1', 'red')
+  const line10 = makeLine(V10, '10', 'green')
+  const line100 = makeLine(V100, '100', 'blue')
+  const lineReal = makeLine(real, 'true values', 'black')
+  const layout = {
+    width: 800,
+    height: 600
+  }
+  const data = [line0, line1, line10, line100, lineReal]
+  plot(data, layout)
+  console.dir(U.toSignificantDigits(V100))
 }
 
 main()
