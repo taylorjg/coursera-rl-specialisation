@@ -114,6 +114,13 @@ const makeLine = (values, name, color) => ({
   name
 })
 
+const makeAnnotation = (x, line) => ({
+  x,
+  y: line.y[x],
+  text: line.name,
+  showarrow: false
+})
+
 const main = () => {
   const RUNS = 100
   const values1 = doRuns(0.1, RUNS)
@@ -125,7 +132,13 @@ const main = () => {
   const data = [line1, line2, line3]
   const layout = {
     width: 800,
-    height: 600
+    height: 600,
+    showlegend: false,
+    annotations: [
+      makeAnnotation(70, line1),
+      makeAnnotation(75, line2),
+      makeAnnotation(80, line3)
+    ]
   }
   plot(data, layout)
 }
