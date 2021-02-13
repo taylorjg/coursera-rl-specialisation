@@ -20,6 +20,9 @@ const A = [LEFT, RIGHT]
 const ALPHA = 0.1
 const GAMMA = 1
 
+const isTerminalState = s =>
+  s === STATE_TERMINAL_LEFT || s === STATE_TERMINAL_RIGHT
+
 const move = (s, a) => {
   switch (a) {
     case LEFT: return s - 1
@@ -37,7 +40,7 @@ const takeAction = (s, a) => {
     case STATE_E:
       const s2 = move(s, a)
       const r = s2 === STATE_TERMINAL_RIGHT ? 1 : 0
-      const done = s2 === STATE_TERMINAL_LEFT || s2 === STATE_TERMINAL_RIGHT
+      const done = isTerminalState(s2)
       return { s2, r, done }
 
     case STATE_TERMINAL_LEFT:
@@ -50,7 +53,7 @@ const takeAction = (s, a) => {
 }
 
 const TD0 = (pi, maxEpisodes) => {
-  const V = new Map(S_PLUS.map(s => [s, s === STATE_TERMINAL_LEFT || s === STATE_TERMINAL_RIGHT ? 0 : 0.5]))
+  const V = new Map(S_PLUS.map(s => [s, isTerminalState(s) ? 0 : 0.5]))
   for (const _ of U.rangeIter(maxEpisodes)) {
     let s = S0
     for (; ;) {
@@ -79,17 +82,17 @@ const main = () => {
   const V1 = TD0(pi, 1)
   const V10 = TD0(pi, 10)
   const V100 = TD0(pi, 100)
-  const real = new Map(U.range(5).map(n => n + 1).map(s => [s, s / 6]))
+  const trueValues = new Map(S.map(s => [s, s / 6]))
   const line0 = makeLine(V0, '0', 'grey')
   const line1 = makeLine(V1, '1', 'red')
   const line10 = makeLine(V10, '10', 'green')
   const line100 = makeLine(V100, '100', 'blue')
-  const lineReal = makeLine(real, 'true values', 'black')
+  const lineTrueValues = makeLine(trueValues, 'true values', 'black')
   const layout = {
     width: 800,
     height: 600
   }
-  const data = [line0, line1, line10, line100, lineReal]
+  const data = [line0, line1, line10, line100, lineTrueValues]
   plot(data, layout)
   console.dir(U.toSignificantDigits(V100))
 }
