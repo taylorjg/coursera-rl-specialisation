@@ -90,7 +90,10 @@ const main = () => {
   const lineTrueValues = makeLine(trueValues, 'true values', 'black')
   const layout = {
     width: 800,
-    height: 600
+    height: 600,
+    yaxis: {
+      range: [0, 1]
+    }
   }
   const data = [line0, line1, line10, line100, lineTrueValues]
   plot(data, layout)
