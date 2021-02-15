@@ -66,36 +66,52 @@ const generateEpisode = pi => {
   return episode
 }
 
-const processBatch = (V, alpha, episodes) => {
-  const batch = episodes.flatMap(episode => episode)
-  const totalIncrementPerState = new Map(S_PLUS.map(s => [s, 0]))
-  batch.forEach(({ s, s2, r }) => {
+const batchTD0 = (V, alpha, incrementsMap) => episode => {
+  episode.forEach(({ s, s2, r }) => {
     const increment = alpha * (r + GAMMA * V.get(s2) - V.get(s))
-    const currentTotalIncrement = totalIncrementPerState.get(s)
-    totalIncrementPerState.set(s, currentTotalIncrement + increment)
+    incrementsMap.set(s, incrementsMap.get(s) + increment)
   })
-  for (const [s, totalIncrement] of totalIncrementPerState) {
-    if (!isTerminalState(s)) {
-      V.set(s, V.get(s) + totalIncrement)
-    }
-  }
-  return Math.max(...totalIncrementPerState.values())
 }
 
-const processBatchManyTimes = (V, alpha, episodes) => {
+const batchMC = (V, alpha, incrementsMap) => episode => {
+  let G = 0
+  const ts = U.range(episode.length)
+  for (const t of ts.reverse()) {
+    const { s, r } = episode[t]
+    G = GAMMA * G + r
+    const increment = alpha * (G - V.get(s))
+    incrementsMap.set(s, incrementsMap.get(s) + increment)
+  }
+}
+
+const processBatch = (predictionMethod, V, alpha, episodes) => {
+
+  const incrementsMap = new Map(S_PLUS.map(s => [s, 0]))
+  episodes.forEach(predictionMethod(V, alpha, incrementsMap))
+
+  for (const [s, increment] of incrementsMap) {
+    if (!isTerminalState(s)) {
+      V.set(s, V.get(s) + increment)
+    }
+  }
+
+  return Math.max(...incrementsMap.values())
+}
+
+const processBatchManyTimes = (predictionMethod, V, alpha, episodes) => {
   for (; ;) {
-    const maxIncrement = processBatch(V, alpha, episodes)
+    const maxIncrement = processBatch(predictionMethod, V, alpha, episodes)
     if (maxIncrement < 1e-4) break
   }
 }
 
-const batchTD0 = (pi, alpha, maxEpisodes, cb) => {
+const doEpisodes = (predictionMethod, pi, alpha, maxEpisodes, cb) => {
   const V = new Map(S_PLUS.map(s => [s, isTerminalState(s) ? 0 : 0.5]))
   const episodes = []
   for (const _ of U.rangeIter(maxEpisodes)) {
     const episode = generateEpisode(pi)
     episodes.push(episode)
-    processBatchManyTimes(V, alpha, episodes)
+    processBatchManyTimes(predictionMethod, V, alpha, episodes)
     cb(V)
   }
 }
@@ -117,7 +133,7 @@ const doRun = (predictionMethod, alpha, maxEpisodes) => {
   const pi = _s => U.randomChoice(A)
   const values = []
   const trueValues = new Map(S.map(s => [s, s / 6]))
-  predictionMethod(pi, alpha, maxEpisodes, V => { values.push(rms(V, trueValues)) })
+  doEpisodes(predictionMethod, pi, alpha, maxEpisodes, V => { values.push(rms(V, trueValues)) })
   return values
 }
 
@@ -152,7 +168,8 @@ const makeAnnotation = (x, line) => ({
   x,
   y: line.y[x],
   text: line.name,
-  showarrow: false,
+  showarrow: true,
+  arrowcolor: line.line.color,
   font: {
     color: line.line.color
   }
@@ -166,17 +183,20 @@ const main = () => {
   const MAX_RUNS = 100
 
   const values1 = doRuns(batchTD0, ALPHA, MAX_RUNS)
+  const values2 = doRuns(batchMC, ALPHA, MAX_RUNS)
   const line1 = makeLine(values1, 'TD', 'steelblue')
-  const data = [line1]
+  const line2 = makeLine(values2, 'MC', 'crimson')
+  const data = [line1, line2]
   const layout = {
     width: 800,
     height: 600,
     showlegend: false,
     yaxis: {
-      range: [0, 0.25]
+      range: [0, 0.3]
     },
     annotations: [
-      makeAnnotation(20, line1)
+      makeAnnotation(20, line1),
+      makeAnnotation(40, line2)
     ]
   }
   plot(data, layout)

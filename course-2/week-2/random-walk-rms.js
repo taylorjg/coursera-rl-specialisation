@@ -154,7 +154,8 @@ const makeAnnotation = (x, line) => ({
   x,
   y: line.y[x],
   text: line.name,
-  showarrow: false,
+  showarrow: true,
+  arrowcolor: line.line.color,
   font: {
     color: line.line.color
   }
