@@ -1,3 +1,4 @@
+const { plot } = require('nodeplotlib')
 const U = require('../../utils')
 
 const WIDTH = 10
@@ -60,11 +61,12 @@ const makePolicy = Q => s => {
 }
 
 const sarsa = pi => {
+  const values = []
+  let totalIterations = 0
   const MAX_EPISODES = 200
   for (const episode of U.rangeIter(MAX_EPISODES)) {
     let s = START
     let a = pi(s)
-    let iterations = 0
     for (; ;) {
       const { s2, r } = takeAction(s, a)
       const a2 = pi(s2)
@@ -73,13 +75,14 @@ const sarsa = pi => {
       updateQ(s, a, newQ)
       s = s2
       a = a2
-      iterations += 1
+      totalIterations += 1
       if (s === GOAL) {
-        console.log(`episode: ${episode}; iterations: ${iterations}`)
+        values.push({ totalIterations, completedEpisodes: episode + 1 })
         break
       }
     }
   }
+  return values
 }
 
 const makeGreedyPolicy = Q => s => {
@@ -100,9 +103,24 @@ const exampleGreedyTrajectory = Q => {
   }
 }
 
+const makeLine = (values, color) => ({
+  x: values.map(({ totalIterations }) => totalIterations),
+  y: values.map(({ completedEpisodes }) => completedEpisodes),
+  mode: 'lines',
+  line: { color }
+})
+
 const main = () => {
   const pi = makePolicy(Q)
-  sarsa(pi)
+  const values = sarsa(pi)
+  const line = makeLine(values, 'crimson')
+  const data = [line]
+  const layout = {
+    width: 800,
+    height: 600,
+    showlegend: false
+  }
+  plot(data, layout)
   exampleGreedyTrajectory(Q)
 }
 
