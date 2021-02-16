@@ -11,6 +11,8 @@ const sum = xs => xs.reduce((acc, x) => acc + x, 0)
 
 const average = xs => sum(xs) / xs.length
 
+const clip = (min, max, v) => Math.max(Math.min(max, v), min)
+
 const randomChoice = xs => xs[Math.floor(Math.random() * xs.length)]
 
 const argmax = xs => {
@@ -38,6 +40,7 @@ module.exports = {
   rangeIter,
   sum,
   average,
+  clip,
   randomChoice,
   argmax,
   toSignificantDigits

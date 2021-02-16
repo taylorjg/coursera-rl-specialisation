@@ -22,6 +22,18 @@ describe('utils', () => {
     expect(U.average([1, 2, 3, 4, 5])).toEqual((1 + 2 + 3 + 4 + 5) / 5)
   })
 
+  it('clip: within range', () => {
+    expect(U.clip(10, 20, 15)).toEqual(15)
+  })
+
+  it('clip: less than min', () => {
+    expect(U.clip(10, 20, 5)).toEqual(10)
+  })
+
+  it('clip: greater than max', () => {
+    expect(U.clip(10, 20, 25)).toEqual(20)
+  })
+
   it('randomChoice', () => {
     const ITERS = 10000
     const TOLERANCE_PC = 10
