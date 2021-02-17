@@ -62,9 +62,10 @@ const makePolicy = Q => s => {
 
 const sarsa = pi => {
   const values = []
-  let totalIterations = 0
+  let timeSteps = 0
+  let episodes = 0
   const MAX_EPISODES = 200
-  for (const episode of U.rangeIter(MAX_EPISODES)) {
+  for (const _ of U.rangeIter(MAX_EPISODES)) {
     let s = START
     let a = pi(s)
     for (; ;) {
@@ -75,9 +76,10 @@ const sarsa = pi => {
       updateQ(s, a, newQ)
       s = s2
       a = a2
-      totalIterations += 1
+      timeSteps += 1
       if (s === GOAL) {
-        values.push({ totalIterations, completedEpisodes: episode + 1 })
+        episodes += 1
+        values.push({ timeSteps, episodes })
         break
       }
     }
@@ -104,8 +106,8 @@ const exampleGreedyTrajectory = Q => {
 }
 
 const makeLine = (values, color) => ({
-  x: values.map(({ totalIterations }) => totalIterations),
-  y: values.map(({ completedEpisodes }) => completedEpisodes),
+  x: values.map(({ timeSteps }) => timeSteps),
+  y: values.map(({ episodes }) => episodes),
   mode: 'lines',
   line: { color }
 })
@@ -118,7 +120,13 @@ const main = () => {
   const layout = {
     width: 800,
     height: 600,
-    showlegend: false
+    showlegend: false,
+    xaxis: {
+      title: 'Time steps'
+    },
+    yaxis: {
+      title: 'Episodes'
+    }
   }
   plot(data, layout)
   exampleGreedyTrajectory(Q)

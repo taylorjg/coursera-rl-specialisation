@@ -188,7 +188,11 @@ const main = () => {
     width: 800,
     height: 600,
     showlegend: false,
+    xaxis: {
+      title: 'Walks / Episodes'
+    },
     yaxis: {
+      title: 'Empirical RMS error, averaged over states',
       range: [0, 0.25]
     },
     annotations: [

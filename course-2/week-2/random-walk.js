@@ -76,6 +76,17 @@ const makeLine = (V, name, color) => ({
   name
 })
 
+const makeAnnotation = (x, line) => ({
+  x,
+  y: line.y[x],
+  text: line.name,
+  showarrow: true,
+  arrowcolor: line.line.color,
+  font: {
+    color: line.line.color
+  }
+})
+
 const main = () => {
   const pi = _s => U.randomChoice(A)
   const V0 = TD0(pi, 0)
@@ -84,16 +95,28 @@ const main = () => {
   const V100 = TD0(pi, 100)
   const trueValues = new Map(S.map(s => [s, s / 6]))
   const line0 = makeLine(V0, '0', 'grey')
-  const line1 = makeLine(V1, '1', 'red')
-  const line10 = makeLine(V10, '10', 'green')
-  const line100 = makeLine(V100, '100', 'blue')
+  const line1 = makeLine(V1, '1', 'crimson')
+  const line10 = makeLine(V10, '10', 'forestgreen')
+  const line100 = makeLine(V100, '100', 'steelblue')
   const lineTrueValues = makeLine(trueValues, 'true values', 'black')
   const layout = {
     width: 800,
     height: 600,
+    showlegend: false,
+    xaxis: {
+      title: 'State'
+    },
     yaxis: {
+      title: 'Estimated value',
       range: [0, 1]
-    }
+    },
+    annotations: [
+      makeAnnotation(0, line0),
+      makeAnnotation(1, line1),
+      makeAnnotation(2, line10),
+      makeAnnotation(3, line100),
+      makeAnnotation(4, lineTrueValues)
+    ]
   }
   const data = [line0, line1, line10, line100, lineTrueValues]
   plot(data, layout)
