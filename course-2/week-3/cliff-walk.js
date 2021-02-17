@@ -1,19 +1,20 @@
 const { plot } = require('nodeplotlib')
 const U = require('../../utils')
 
-const WIDTH = 10
-const HEIGHT = 7
+const WIDTH = 12
+const HEIGHT = 4
 const MAX_X = WIDTH - 1
 const MAX_Y = HEIGHT - 1
-
-const WIND_STRENGTH = [0, 0, 0, 1, 1, 1, 2, 2, 1, 0]
 
 const encodeCoords = ([x, y]) => `${x}:${y}`
 const decodeCoords = s => s.split(':').map(Number)
 
 const S = U.range(HEIGHT).flatMap(y => U.range(WIDTH).map(x => encodeCoords([x, y])))
-const START = encodeCoords([0, 3])
-const GOAL = encodeCoords([7, 3])
+const START = encodeCoords([0, MAX_Y])
+const GOAL = encodeCoords([MAX_X, MAX_Y])
+const CLIFF = U.range(WIDTH)
+  .map(x => encodeCoords([x, MAX_Y]))
+  .filter(s => s !== START && s !== GOAL)
 
 const UP = 0
 const DOWN = 1
@@ -42,10 +43,11 @@ const move = (x, y, a) => {
 const takeAction = (s, a) => {
   const [x1, y1] = decodeCoords(s)
   const [x2, y2] = move(x1, y1, a)
-  const x3 = U.clip(0, MAX_X, x2)
-  const windStrength = WIND_STRENGTH[x3]
-  const y3 = U.clip(0, MAX_Y, y2 - windStrength)
+  const [x3, y3] = [U.clip(0, MAX_X, x2), U.clip(0, MAX_Y, y2)]
   const s2 = encodeCoords([x3, y3])
+  if (CLIFF.includes(s2)) {
+    return { s2: START, r: -100 }
+  }
   return { s2, r: -1 }
 }
 
@@ -67,30 +69,54 @@ const makeGreedyPolicy = Q => s => {
 
 const sarsa = () => {
   const Q = new Map(S.map(s => [s, new Map(A.map(a => [a, 0]))]))
-  const values = []
+  const totalRewards = []
   const pi = makeEpsilonGreedyPolicy(Q)
-  let timeSteps = 0
-  let episodes = 0
   for (const _ of U.rangeIter(MAX_EPISODES)) {
     let s = START
+    let totalReward = 0
     let a = pi(s)
     for (; ;) {
       const { s2, r } = takeAction(s, a)
+      totalReward += r
       const a2 = pi(s2)
       const oldQ = lookupQ(Q, s, a)
       const newQ = oldQ + ALPHA * (r + GAMMA * lookupQ(Q, s2, a2) - oldQ)
       updateQ(Q, s, a, newQ)
       s = s2
       a = a2
-      timeSteps += 1
       if (s === GOAL) {
-        episodes += 1
-        values.push({ timeSteps, episodes })
+        totalRewards.push(totalReward)
         break
       }
     }
   }
-  return { Q, values }
+  return { Q, totalRewards }
+}
+
+const Qlearning = () => {
+  const Q = new Map(S.map(s => [s, new Map(A.map(a => [a, 0]))]))
+  const totalRewards = []
+  const pi = makeEpsilonGreedyPolicy(Q)
+  for (const _ of U.rangeIter(MAX_EPISODES)) {
+    let s = START
+    let totalReward = 0
+    for (; ;) {
+      let a = pi(s)
+      const { s2, r } = takeAction(s, a)
+      totalReward += r
+      const oldQ = lookupQ(Q, s, a)
+      const values = A.map(a => lookupQ(Q, s2, a))
+      const maxValue = Math.max(...values)
+      const newQ = oldQ + ALPHA * (r + GAMMA * maxValue - oldQ)
+      updateQ(Q, s, a, newQ)
+      s = s2
+      if (s === GOAL) {
+        totalRewards.push(totalReward)
+        break
+      }
+    }
+  }
+  return { Q, totalRewards }
 }
 
 const drawTrajectory = trajectory => {
@@ -120,31 +146,41 @@ const exampleGreedyTrajectory = Q => {
   return trajectory
 }
 
-const makeLine = (values, color) => ({
-  x: values.map(({ timeSteps }) => timeSteps),
-  y: values.map(({ episodes }) => episodes),
+const makeLine = (values, name, color) => ({
+  x: values.map((_, index) => index + 1),
+  y: values,
   mode: 'lines',
-  line: { color }
+  line: { color },
+  name
 })
 
 const main = () => {
-  const { Q, values } = sarsa()
-  const line = makeLine(values, 'crimson')
-  const data = [line]
+  const { Q: Q1, totalRewards: values1 } = sarsa()
+  const { Q: Q2, totalRewards: values2 } = Qlearning()
+
+  const line1 = makeLine(values1, 'Sarsa', 'steelblue')
+  const line2 = makeLine(values2, 'Q-learning', 'crimson')
+  const data = [line1, line2]
   const layout = {
     width: 800,
     height: 600,
     showlegend: false,
     xaxis: {
-      title: 'Time steps'
+      title: 'Episodes'
     },
     yaxis: {
-      title: 'Episodes'
+      title: 'Sum of rewards during episode'
     }
   }
+
   plot(data, layout)
-  const trajectory = exampleGreedyTrajectory(Q)
-  drawTrajectory(trajectory)
+  const trajectory1 = exampleGreedyTrajectory(Q1)
+  drawTrajectory(trajectory1)
+
+  console.log()
+
+  const trajectory2 = exampleGreedyTrajectory(Q2)
+  drawTrajectory(trajectory2)
 }
 
 main()
