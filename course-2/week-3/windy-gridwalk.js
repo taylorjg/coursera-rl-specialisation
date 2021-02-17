@@ -94,14 +94,24 @@ const makeGreedyPolicy = Q => s => {
 }
 
 const exampleGreedyTrajectory = Q => {
+  const states = []
   const pi = makeGreedyPolicy(Q)
   let s = START
+  states.push(s)
   for (; ;) {
     let a = pi(s)
-    console.log(`taking action ${a} in state "${s}"`)
     const { s2 } = takeAction(s, a)
     s = s2
+    states.push(s)
     if (s === GOAL) break
+  }
+  for (const y of U.rangeIter(HEIGHT)) {
+    const chs = []
+    for (const x of U.rangeIter(WIDTH)) {
+      const ch = states.includes(encodeCoords([x, y])) ? '*' : '.'
+      chs.push(ch)
+    }
+    console.log(chs.join(' '))
   }
 }
 
