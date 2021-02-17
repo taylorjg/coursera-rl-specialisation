@@ -147,30 +147,58 @@ const exampleGreedyTrajectory = Q => {
 }
 
 const makeLine = (values, name, color) => ({
-  x: values.map((_, index) => index + 1),
-  y: values,
+  x: values.map(({ x }) => x),
+  y: values.map(({ y }) => y),
   mode: 'lines',
   line: { color },
   name
 })
 
+const makeAnnotation = (x, y, line) => ({
+  x,
+  y,
+  text: line.name,
+  showarrow: false,
+  arrowcolor: line.line.color,
+  font: {
+    color: line.line.color
+  }
+})
+
+const smoothValues = values => {
+  const WINDOW_SIZE = 50
+  const numValues = values.length
+  return U.range(numValues - WINDOW_SIZE).map(startIndex => {
+    const endIndex = startIndex + WINDOW_SIZE
+    const window = values.slice(startIndex, endIndex)
+    const x = endIndex
+    const y = U.average(window)
+    return { x, y }
+  })
+}
+
 const main = () => {
   const { Q: Q1, totalRewards: values1 } = sarsa()
   const { Q: Q2, totalRewards: values2 } = Qlearning()
 
-  const line1 = makeLine(values1, 'Sarsa', 'steelblue')
-  const line2 = makeLine(values2, 'Q-learning', 'crimson')
+  const line1 = makeLine(smoothValues(values1), 'Sarsa', 'steelblue')
+  const line2 = makeLine(smoothValues(values2), 'Q-learning', 'crimson')
   const data = [line1, line2]
   const layout = {
     width: 800,
     height: 600,
     showlegend: false,
     xaxis: {
-      title: 'Episodes'
+      title: 'Episodes',
+      range: [0, 500]
     },
     yaxis: {
       title: 'Sum of rewards during episode'
-    }
+    },
+    annotations: [
+      makeAnnotation(250, -10, line1),
+      makeAnnotation(250, -80, line2)
+    ]
   }
 
   plot(data, layout)
