@@ -200,8 +200,8 @@ const main = () => {
       makeAnnotation(250, -80, line2)
     ]
   }
-
   plot(data, layout)
+
   const trajectory1 = exampleGreedyTrajectory(Q1)
   drawTrajectory(trajectory1)
 
